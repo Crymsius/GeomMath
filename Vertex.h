@@ -5,7 +5,7 @@
 
 struct Vertex {
     Point position; // Position du sommet
-    unsigned faceIncidente; // Accès à UNE face incidente
+    int faceIncidente; // Accès à UNE face incidente
 };
 
 #endif /* Vertex_h */

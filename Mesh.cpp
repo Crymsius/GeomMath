@@ -270,7 +270,37 @@ int Mesh::VertexIndexOnFace (const Vertex& vertex, const Face& face) const {
 }
 
 void Mesh::inserer_sommet(Vertex v) {
-    //do stuff
+    
+    unsigned indice_sommet = (unsigned) vertices.size();
+    
+    //ajout du vertex dans le mesh
+    vertices.push_back(v);
+    
+    //tester si c'est dans une face ou pas
+    for (int i = 0; i < faces.size(); ++i) {
+        if (is_in_triangle(faces[i], v)){
+            //c'est dans la face i
+            split_face(i, indice_sommet);
+            return;
+        }
+    }
+    //c'est en dehors
+
+    //donner une face indidente
+    
+    
+    
+}
+
+bool Mesh::is_trigo (Vertex a, Vertex b, Vertex c) {
+    return ((b.position.x - a.position.x)*(c.position.y - a.position.y) - (b.position.y - a.position.y)*(c.position.x - a.position.x) > 0) ;
+}
+
+bool Mesh::is_in_triangle (Face f, Vertex v) {
+    Vertex a = vertices[f.indices[0]];
+    Vertex b = vertices[f.indices[1]];
+    Vertex c = vertices[f.indices[2]];
+    return is_trigo(a, b, v) && is_trigo(b, c, v) && is_trigo(c, a, v);
 }
 
 void Mesh::split_face (int i, unsigned p) {
@@ -286,7 +316,7 @@ void Mesh::split_face (int i, unsigned p) {
     //faces
     int j = face_i.facesAdjacentes[1];
     int k = face_i.facesAdjacentes[2];
-    unsigned m = (unsigned) faces.size();
+    int m = (int) faces.size();
     
     //changement face incidente des points
     vertices[p].faceIncidente = i;
@@ -319,13 +349,13 @@ void Mesh::split_face (int i, unsigned p) {
     faces[i].facesAdjacentes[2] = m+1;
     
     if (j != -1) {
-        unsigned aDansj = VertexIndexOnFace(vertices[a], j);
-        faces[j].facesAdjacentes[aDansj + 2] = m;
+        int aDansj = VertexIndexOnFace(vertices[a], faces[j]);
+        faces[j].facesAdjacentes[(aDansj + 2)%faces[j].nbIndicesPerFace] = m;
     }
     
     if (k != -1) {
-        unsigned aDansk = VertexIndexOnFace(vertices[a], k);
-        faces[k].facesAdjacentes[aDansk + 1] = m+1;
+        int aDansk = VertexIndexOnFace(vertices[a], faces[k]);
+        faces[k].facesAdjacentes[(aDansk + 1)%faces[k].nbIndicesPerFace] = m+1;
     }
 }
 

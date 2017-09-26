@@ -129,6 +129,9 @@ private:
 
     int VertexIndexOnFace(const Vertex& vertex, const Face& face) const;
  
+    bool is_trigo (Vertex a, Vertex b, Vertex c);
+    bool is_in_triangle (Face f, Vertex v);
+    
     void split_face (int face, unsigned p);
     void flip (int face, unsigned oppArete);
 };

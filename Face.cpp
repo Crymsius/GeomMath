@@ -12,10 +12,9 @@ Face::Face(int nbIndicesPerFace):
 
 Face::Face(const std::vector<unsigned>& indices, int nbIndicesPerFace):
     indices(indices),
-    nbIndicesPerFace(nbIndicesPerFace)
-{
-    facesAdjacentes.reserve(nbIndicesPerFace);
-}
+    nbIndicesPerFace(nbIndicesPerFace),
+    facesAdjacentes(nbIndicesPerFace)
+{}
 
 Face::Face(const Face &face) {
     this->indices = face.indices;
