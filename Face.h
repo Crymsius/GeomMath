@@ -8,12 +8,13 @@
 struct Face {
     
     std::vector<unsigned> indices; // sommets dans l'ordre trigo
-    unsigned nbIndicesPerFace; // nb de sommet de la face
-    std::vector<unsigned> facesAdjacentes; // Accès aux faces adjacentes
-    
+    int nbIndicesPerFace; // nb de sommet de la face
+    std::vector<int> facesAdjacentes; // Accès aux faces adjacentes
+    //ATTENTION IL FAUT CHANGER LES FACESADJACENTES POUR UN TABLEAU !!!!
+
     Face();
-    Face(unsigned nbIndexPerFace);
-    Face(const std::vector<unsigned>& indices, unsigned nbIndicesPerFace);
+    Face(int nbIndexPerFace);
+    Face(const std::vector<unsigned>& indices, int nbIndicesPerFace);
     Face(const Face& face);
     
 };

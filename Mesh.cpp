@@ -55,8 +55,6 @@ Vertex& Iterateur_de_sommets::operator* () const {
 
 /*CIRCULATEUR_DE_FACES*/
 
-Circulateur_de_faces Circulateur_de_faces::end;
-
 Circulateur_de_faces::Circulateur_de_faces () :
     mesh(nullptr),
     sommet_parent(nullptr),
@@ -70,10 +68,6 @@ Circulateur_de_faces::Circulateur_de_faces (const Mesh& mesh_associe, const Vert
     face_courante(v.faceIncidente),
     premiere_face(face_courante)
 {}
-
-const Circulateur_de_faces& Circulateur_de_faces::End () {
-    return end;
-}
 
 Circulateur_de_faces& Circulateur_de_faces::operator= (const Circulateur_de_faces& rhs)
 {
@@ -102,19 +96,14 @@ Circulateur_de_faces& Circulateur_de_faces::operator++ () {
             continue;
         // if the left edge of the current face is the right edge of the adjacent face
         if (current_face.indices[(vertex_index + 2) % 3] == adjacent_face.indices[(v_index + 1) % 3]) {
-            if (premiere_face == i) {
-                *this = Circulateur_de_faces::end;
-            } else {
-                face_courante = i;
-            }
-            return *this;
+            face_courante = i;
+        return *this;
         }
     }
-    *this = Circulateur_de_faces::end;
     return *this;
 }
 
-unsigned Circulateur_de_faces::operator* () const {
+int Circulateur_de_faces::operator* () const {
     return face_courante;
 }
 
@@ -123,35 +112,48 @@ Circulateur_de_faces Mesh::faces_incidentes (const Vertex& v) const {
 }
 
 /*CIRCULATEUR_DE_SOMMETS*/
-//Circulateur_de_sommets::Circulateur_de_sommets(std::vector<Vertex>::iterator pos, Vertex vparent, unsigned vcourant, Mesh& mesh) : current_it(pos), sommet_parent(vparent), sommet_courant(vcourant), mesh(mesh) {}
-//
-//Circulateur_de_sommets& Circulateur_de_sommets::operator=(const Circulateur_de_sommets& rhs)
-//{
-//    current_it = rhs.current_it;
-//    sommet_parent = rhs.sommet_parent;
-//    sommet_courant = rhs.sommet_courant;
-//    mesh = rhs.mesh;
-//    return *this;
-//}
-//
-//Circulateur_de_sommets Circulateur_de_sommets::operator++() {
-//    //sommet_parent->sommet_courant en sens trigo
-//    const std::vector<Face> faces = mesh._Faces();
-//    
-//    auto it = std::find(faces.begin(),faces.end(), sommet_parent);
-//    auto i = it - faces[face_courante].indices.begin();
-//
-//    return *this;
-//}
-//
-//Vertex& Circulateur_de_sommets::operator*() const {
-//    return *current_it;
-//}
-//
-//Circulateur_de_sommets Mesh::sommets_adjacents(Vertex& v) {
-//    auto it = find(vertices.begin(), vertices.end(), v);
-//    return Circulateur_de_sommets(it, v, (unsigned) (it - vertices.begin()), *this);
-//}
+Circulateur_de_sommets::Circulateur_de_sommets () :
+    mesh(nullptr),
+    sommet_parent(nullptr),
+    sommet_courant(0),
+    premier_sommet(sommet_courant)
+{}
+
+Circulateur_de_sommets::Circulateur_de_sommets (const Mesh& mesh_associe, const Vertex& v) :
+    mesh(std::make_shared<Mesh>(mesh_associe)),
+    sommet_parent(std::make_shared<Vertex>(v)),
+    sommet_courant(mesh_associe._Faces()[v.faceIncidente].indices[0]),
+    premier_sommet(sommet_courant)
+{}
+
+Circulateur_de_sommets& Circulateur_de_sommets::operator=(const Circulateur_de_sommets& rhs)
+{
+    if (this == &rhs)
+        return *this;
+    mesh = rhs.mesh;
+    sommet_parent = rhs.sommet_parent;
+    sommet_courant = rhs.sommet_courant;
+    premier_sommet = rhs.premier_sommet;
+    return *this;
+}
+
+
+Circulateur_de_sommets& Circulateur_de_sommets::operator++() {
+//A FINIR
+    //    //sommet_parent->sommet_courant en sens trigo
+//    (mesh._Faces()[sommet_courant.faceIncidente].
+//    sommet_courant
+    return *this;
+}
+
+unsigned Circulateur_de_sommets::operator*() const {
+    return sommet_courant;
+}
+
+Circulateur_de_sommets Mesh::sommets_adjacents(const Vertex& v) const {
+    return Circulateur_de_sommets (*this, v);
+}
+
 
 /*MESH*/
 Iterateur_de_sommets Mesh::sommets_debut() {
@@ -162,7 +164,7 @@ Iterateur_de_sommets Mesh::sommets_fin() {
     return Iterateur_de_sommets(vertices.end());
 }
 
-void Mesh::ReadFromOFF(std::string path) {
+void Mesh::ReadFromOFF(const std::string & path) {
     std::ifstream input_stream;
     input_stream.exceptions(input_stream.badbit | input_stream.failbit);
     
@@ -195,9 +197,9 @@ void Mesh::ReadFromOFF(std::string path) {
     stream >> nbFaces;
     stream >> def;
     
+    //creation et remplissage du vector de sommets
     std::vector<Vertex> vertices(nbVertices);
-    for (unsigned i = 0; i < nbVertices; ++i)
-    {
+    for (unsigned i = 0; i < nbVertices; ++i) {
         stream >> vertex.position.x;
         stream >> vertex.position.y;
         stream >> vertex.position.z;
@@ -206,6 +208,7 @@ void Mesh::ReadFromOFF(std::string path) {
     }
     
     std::vector<Face> faces(nbFaces);
+    //map de (sommet j, sommet j+1), face
     std::map<pair<unsigned, unsigned>, unsigned> mapFaces;
     
     for (unsigned i = 0; i < nbFaces; ++i) {
@@ -213,17 +216,26 @@ void Mesh::ReadFromOFF(std::string path) {
         stream >> nbIndicesPerFace;
         Face face(nbIndicesPerFace);
         
+        //on attribue à chaque sommet de chaque face la face incidente correspondante
         for (unsigned j = 0; j < face.nbIndicesPerFace; ++j) {
             stream >> face.indices[j];
             vertices[face.indices[j]].faceIncidente = i;
         }
         
-        for (unsigned j =0; j<face.nbIndicesPerFace; ++j) {
+        for (unsigned j = 0; j < face.nbIndicesPerFace; ++j) {
             const auto it = mapFaces.find(std::make_pair(face.indices[j], face.indices[(j+1) % face.nbIndicesPerFace]));
-        
+            //existe-t-il la paire d'indices (j,j+1)[3]
             if (it != mapFaces.end()) {
-                face.facesAdjacentes.push_back(it->second);
-                faces[it->second].facesAdjacentes.push_back(i);
+                face.facesAdjacentes[(j+2)%face.nbIndicesPerFace] = it->second;
+                int l = 0;
+                for (int k = 0; k < faces[it->second].nbIndicesPerFace; ++k) {
+                    if (faces[it->second].indices[k] == face.indices[j]) {
+                        l = k;
+                    }
+                }
+                faces[it->second].facesAdjacentes[(l + 1) % faces[it->second].nbIndicesPerFace] = i;
+            } else {
+                face.facesAdjacentes[(j+2)%face.nbIndicesPerFace] = -1;
             }
         }
         
@@ -249,10 +261,117 @@ const std::vector<Face> &Mesh::_Faces() const {
 }
 
 int Mesh::VertexIndexOnFace (const Vertex& vertex, const Face& face) const {
-    for (unsigned i = 0; i < face.nbIndicesPerFace; ++i) {
+    for (int i = 0; i < face.nbIndicesPerFace; ++i) {
         if (vertices[face.indices[i]].position == vertex.position) {
             return i;
         }
     }
     return -1;
+}
+
+void Mesh::inserer_sommet(Vertex v) {
+    //do stuff
+}
+
+void Mesh::split_face (int i, unsigned p) {
+    // i : indice de la face à split
+    // p : indice du point à placer
+    
+    Face face_i = this->faces[i];
+    //sommets de i :
+    unsigned a = face_i.indices[0];
+    unsigned b = face_i.indices[1];
+    unsigned c = face_i.indices[2];
+    
+    //faces
+    int j = face_i.facesAdjacentes[1];
+    int k = face_i.facesAdjacentes[2];
+    unsigned m = (unsigned) faces.size();
+    
+    //changement face incidente des points
+    vertices[p].faceIncidente = i;
+    vertices[a].faceIncidente = m;
+    
+    std::vector<unsigned> sommets_m(3);
+    std::vector<unsigned> sommets_n(3);
+    
+    sommets_m[0] = p;
+    sommets_m[1] = c;
+    sommets_m[2] = a;
+    
+    sommets_n[0] = p;
+    sommets_n[1] = a;
+    sommets_n[2] = b;
+    
+    faces.emplace_back(sommets_m, 3);
+    faces.emplace_back(sommets_n, 3);
+    
+    faces[m].facesAdjacentes[0] = j;
+    faces[m].facesAdjacentes[1] = m+1;
+    faces[m].facesAdjacentes[2] = i;
+    
+    faces[m+1].facesAdjacentes[0] = k;
+    faces[m+1].facesAdjacentes[1] = i;
+    faces[m+1].facesAdjacentes[2] = m;
+    
+    faces[i].indices[0] = p;
+    faces[i].facesAdjacentes[1] = m;
+    faces[i].facesAdjacentes[2] = m+1;
+    
+    if (j != -1) {
+        unsigned aDansj = VertexIndexOnFace(vertices[a], j);
+        faces[j].facesAdjacentes[aDansj + 2] = m;
+    }
+    
+    if (k != -1) {
+        unsigned aDansk = VertexIndexOnFace(vertices[a], k);
+        faces[k].facesAdjacentes[aDansk + 1] = m+1;
+    }
+}
+
+void Mesh::flip (int i, unsigned a) {
+    // i : indice d'une des faces
+    // a : indice du sommet opposé à l'autre face
+    int aDansi = VertexIndexOnFace(vertices[a], faces[i]);
+    
+    // j
+    int j = faces[i].facesAdjacentes[aDansi];
+    if (j == -1) {
+        return;
+    }
+    int bDansj = VertexIndexOnFace(vertices[faces[i].indices[(aDansi+1)%faces[i].nbIndicesPerFace]], faces[j]);
+    
+    // faces externes
+    int m = faces[j].facesAdjacentes[(bDansj+2)%faces[j].nbIndicesPerFace];
+    int n = faces[i].facesAdjacentes[(aDansi+1)%faces[i].nbIndicesPerFace];
+
+    // sommets
+    unsigned b = faces[j].indices[bDansj];
+    unsigned d = faces[j].indices[(bDansj+2)%faces[j].nbIndicesPerFace];
+    
+    // modifications faces adjacentes externes
+    if (m != -1) {
+        int bDansm = VertexIndexOnFace(vertices[faces[j].indices[(bDansj)]], faces[m]);
+        faces[m].facesAdjacentes[(bDansm+1)%faces[m].nbIndicesPerFace] = i;
+    }
+    if (n!= -1) {
+        int aDansn = VertexIndexOnFace(vertices[faces[i].indices[(aDansi)]], faces[n]);
+        faces[n].facesAdjacentes[(aDansn+2)%faces[n].nbIndicesPerFace] = j;
+    }
+    
+    // modifications sommets
+    faces[i].indices[(aDansi+2)%faces[i].nbIndicesPerFace] = faces[j].indices[(bDansj+1)%faces[j].nbIndicesPerFace];
+    faces[j].indices[bDansj] = a;
+   
+    // modifications faces incidentes
+    vertices[b].faceIncidente = i;
+    vertices[d].faceIncidente = j;
+    
+    // modifications faces adjacentes
+    faces[i].facesAdjacentes[(aDansi+1)%faces[i].nbIndicesPerFace] = j;
+    faces[j].facesAdjacentes[(bDansj+2)%faces[j].nbIndicesPerFace] = i;
+    
+    faces[i].facesAdjacentes[aDansi] = m;
+    faces[j].facesAdjacentes[(bDansj+1)%faces[j].nbIndicesPerFace] = n;
+    
 }

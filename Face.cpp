@@ -4,12 +4,13 @@ Face::Face() :
     nbIndicesPerFace(0)
 {}
 
-Face::Face(unsigned nbIndicesPerFace):
+Face::Face(int nbIndicesPerFace):
+    indices(nbIndicesPerFace),
     nbIndicesPerFace(nbIndicesPerFace),
-    indices(3, 0)
+    facesAdjacentes(nbIndicesPerFace)
 {}
 
-Face::Face(const std::vector<unsigned>& indices, unsigned nbIndicesPerFace):
+Face::Face(const std::vector<unsigned>& indices, int nbIndicesPerFace):
     indices(indices),
     nbIndicesPerFace(nbIndicesPerFace)
 {

@@ -27,7 +27,7 @@ int main(void) {
         int cmpt=0 ;
         for (cf = cfdebut, ++cf; cf != cfdebut; ++cf)
             cmpt++ ;
-        std ::cout<< "valence du sommet" << cmpt << std ::endl ;
+        std ::cout<< "valence du sommet " << (*its).position.x << " "<< (*its).position. y << " " << (*its).position.z << " : " << cmpt << std ::endl ;
     }
     
     return 0;
