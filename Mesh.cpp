@@ -252,6 +252,65 @@ void Mesh::ReadFromOFF(const std::string & path) {
     
 }
 
+void Mesh::ReadFromPoints(const std::string & path) {
+    std::ifstream input_stream;
+    input_stream.exceptions(input_stream.badbit | input_stream.failbit);
+    
+    std::stringstream stream;
+    try {
+        input_stream.open(path);
+        stream << input_stream.rdbuf();
+        input_stream.close();
+    }
+    catch (std::ifstream::failure& error) {
+        //todo : log error
+        input_stream.close();
+    }
+    
+    Vertex vertex;
+    Face premiere_face;
+    
+    std::string buf;
+    stream >> buf;
+    if (buf != "POINTS")
+    {
+        //todo: log file is not POINTS, throw exception
+    }
+
+    //creation et remplissage du vector des 3 premiers sommets
+    std::vector<Vertex> vertices(3);
+    for (int i = 0; i < 3; ++i) {
+        stream >> vertex.position.x;
+        stream >> vertex.position.y;
+        stream >> vertex.position.z;
+        
+        vertex.faceIncidente = 0;
+        vertices[i] = vertex;
+    }
+    
+    //creation et remplissage de la première face orientée
+    if (is_trigo(vertices[0], vertices[1], vertices[2]))
+        premiere_face = Face({0,1,2}, 3);
+    else
+        premiere_face = Face({0,2,1}, 3);
+    for (int i = 0; i < 3; ++i) {
+        premiere_face.facesAdjacentes[i] = -1;
+    }
+    this->faces.push_back(premiere_face);
+    this->vertices = std::move(vertices);
+    
+    
+    //creation et remplissage du vector de sommets
+    while (!stream.eof()) {
+        stream >> vertex.position.x;
+        stream >> vertex.position.y;
+        stream >> vertex.position.z;
+        
+        inserer_sommet(vertex);
+    }
+}
+
+
 const std::vector<Vertex> &Mesh::_Vertices() const {
     return vertices;
 }

@@ -16,7 +16,8 @@ int main(void) {
     Circulateur_de_faces cf;
     
 //    Circulateur_de_faces cf(mesh, mesh._Vertices()[0]);
-    mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.off");
+//    mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.off");
+    mesh.ReadFromPoints("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.points");
 //      mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/cube.off");
 //    mesh.ReadFromOFF("/Users/crymsius/Desktop/Boulot/Master/ID3D/MGA/TP/DisplayMesh/DisplayMesh/queen.off");
 
@@ -30,10 +31,10 @@ int main(void) {
 //            cmpt++ ;
 //        std ::cout<< "valence du sommet " << (*its).position.x << " "<< (*its).position. y << " " << (*its).position.z << " : " << cmpt << std ::endl ;
 //    }
-    Vertex v;
-    v.position = Point(0.25f, 0.5f, 0.0f);
-    
-    mesh.inserer_sommet(v);
+//    Vertex v;
+//    v.position = Point(0.25f, 0.5f, 0.0f);
+//    
+//    mesh.inserer_sommet(v);
     
 //    const Vertex v = mesh._Vertices()[mesh._Vertices().size() -1];
 //#ifdef DEBUG

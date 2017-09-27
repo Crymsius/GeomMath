@@ -108,6 +108,7 @@ public:
 class Mesh {
 public:
     void ReadFromOFF(const std::string & path);
+    void ReadFromPoints(const std::string & path);
     const std::vector<Vertex> &_Vertices() const;
     const std::vector<Face> &_Faces() const;
     
