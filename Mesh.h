@@ -2,6 +2,7 @@
 #define Mesh_H
 #include <string>
 #include <vector>
+#include <list>
 #include "Face.h"
 #include "Vertex.h"
 
@@ -104,6 +105,17 @@ public:
         return !( lhs == rhs );
     }
 };
+//
+//class Circulateur_de_contours {
+//private:
+//    std::shared_ptr<Mesh> mesh;
+//    std::list<unsigned>::iterator it_contours;
+//public:
+//    Circulateur_de_contours (const Mesh& mesh_associe);
+//    Circulateur_de_contours& operator=(const Circulateur_de_contours& other);  // assignment
+//    Circulateur_de_contours& operator++();
+//    Circulateur_de_contours& operator--();
+//};
 
 class Mesh {
 public:
@@ -111,6 +123,7 @@ public:
     void ReadFromPoints(const std::string & path);
     const std::vector<Vertex> &_Vertices() const;
     const std::vector<Face> &_Faces() const;
+    const std::list<unsigned> &_Contours() const;
     
     Iterateur_de_faces faces_debut();
     Iterateur_de_faces faces_fin();
@@ -122,11 +135,18 @@ public:
     Circulateur_de_sommets sommets_adjacents(const Vertex& v) const;
   
     void inserer_sommet (Vertex v);
+    struct Contours {
+        std::pair<unsigned, unsigned> aretes;
+        unsigned faces;
+    };
     
 private:
     friend class Circulateur_de_faces;
+    
     std::vector<Vertex> vertices; /// Sommets du maillage
     std::vector<Face> faces; /// Faces du maillage
+    std::list<Contours> contours; ///  contour
+    
 
     int VertexIndexOnFace(const Vertex& vertex, const Face& face) const;
  

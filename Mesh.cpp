@@ -154,6 +154,35 @@ Circulateur_de_sommets Mesh::sommets_adjacents(const Vertex& v) const {
     return Circulateur_de_sommets (*this, v);
 }
 
+//
+//Circulateur_de_contours::Circulateur_de_contours (const Mesh& mesh_associe) :
+//    mesh(std::make_shared<Mesh>(mesh_associe)),
+//    it_contours(mesh->contours.begin())
+//{}
+//
+//Circulateur_de_contours& Circulateur_de_contours::operator=(const Circulateur_de_contours& rhs){
+//    if (this == &rhs)
+//        return *this;
+//    mesh = rhs.mesh;
+//    it_contours= rhs.it_contours;
+//    return *this;
+//}
+//Circulateur_de_contours& Circulateur_de_contours::operator++() {
+//    if (++it_contours == mesh->_Contours().end()) {
+//        auto it = mesh->_Contours().begin();
+//        it_contours = it;
+//    }
+//    else
+//        ++it_contours;
+//    return *this;
+//}
+//Circulateur_de_contours& Circulateur_de_contours::operator--() {
+//    if (--it_contours == mesh->_Contours().begin())
+//        it_contours = mesh->_Contours().end();
+//    else
+//        --it_contours;
+//    return *this;
+//}
 
 /*MESH*/
 Iterateur_de_sommets Mesh::sommets_debut() {
@@ -279,6 +308,9 @@ void Mesh::ReadFromPoints(const std::string & path) {
 
     //creation et remplissage du vector des 3 premiers sommets
     std::vector<Vertex> vertices(3);
+//    std::list<unsigned> contours(3);
+    std::list<Contours>listContours;
+    
     for (int i = 0; i < 3; ++i) {
         stream >> vertex.position.x;
         stream >> vertex.position.y;
@@ -289,16 +321,42 @@ void Mesh::ReadFromPoints(const std::string & path) {
     }
     
     //creation et remplissage de la première face orientée
-    if (is_trigo(vertices[0], vertices[1], vertices[2]))
+    if (is_trigo(vertices[0], vertices[1], vertices[2])) {
         premiere_face = Face({0,1,2}, 3);
-    else
+        Contours a;
+        Contours b;
+        Contours c;
+        a.aretes = std::make_pair(0,1);
+        a.faces = 0;
+        b.aretes = std::make_pair(1,2);
+        b.faces = 0;
+        c.aretes = std::make_pair(2,0);
+        c.faces = 0;
+        listContours.push_back(a);
+        listContours.push_back(b);
+        listContours.push_back(c);
+        
+    } else {
         premiere_face = Face({0,2,1}, 3);
+        Contours a;
+        Contours b;
+        Contours c;
+        a.aretes = std::make_pair(0,2);
+        a.faces = 0;
+        b.aretes = std::make_pair(2,1);
+        b.faces = 0;
+        c.aretes = std::make_pair(1,0);
+        c.faces = 0;
+        listContours.push_back(a);
+        listContours.push_back(b);
+        listContours.push_back(c);
+    }
     for (int i = 0; i < 3; ++i) {
         premiere_face.facesAdjacentes[i] = -1;
     }
     this->faces.push_back(premiere_face);
     this->vertices = std::move(vertices);
-    
+    this->contours = listContours;
     
     //creation et remplissage du vector de sommets
     while (!stream.eof()) {
@@ -336,19 +394,171 @@ void Mesh::inserer_sommet(Vertex v) {
     vertices.push_back(v);
     
     //tester si c'est dans une face ou pas
-    for (int i = 0; i < faces.size(); ++i) {
+    int i = 0;
+    for (i; i < faces.size(); ++i) {
         if (is_in_triangle(faces[i], v)){
             //c'est dans la face i
             split_face(i, indice_sommet);
             return;
         }
     }
+  
     //c'est en dehors
-
-    //donner une face indidente
-    
-    
-    
+    //insertion sommet + premiere face
+    if (i == faces.size()) {
+        
+//        std::pair<unsigned, unsigned> previous = std::make_pair(0, 0);
+//        for (auto it = contours.begin(); it != contours.end(); ++it) {
+//            if (is_trigo(vertices[it->aretes.first], v, vertices[it->aretes.second])) {
+//                
+//                int m = faces.size();
+//                
+//                std::vector<unsigned> sommets_m(3);
+//                sommets_m[0] = it->aretes.first;
+//                sommets_m[1] = indice_sommet;
+//                sommets_m[2] = it->aretes.second;
+//                
+//                faces.emplace_back(sommets_m, 3);
+//                faces[m].facesAdjacentes[0] = -1;
+//                faces[m].facesAdjacentes[1] = it->faces; //indice de la face opposée au novueau sommet
+//                faces[m].facesAdjacentes[2] = -1;
+//                
+//                if (previous == std::make_pair(sommets_m[1], sommets_m[0])) {
+//                    it = contours.erase(--it);
+//                    it = contours.erase(it);
+//                    
+//                    previous.first = 0;
+//                    previous.second = 0;
+//                } else {
+//                    it->aretes.first = sommets_m[0];
+//                    it->aretes.second = sommets_m[1];
+//                    it->faces = m;
+//                    
+//                    previous.first = sommets_m[1];
+//                    previous.second = sommets_m[2];
+//                }
+//                Contours newcontours;
+//                newcontours.aretes = std::make_pair(sommets_m[1], sommets_m[2]);
+//                newcontours.faces = m;
+//                
+//                it = contours.insert(++it, newcontours);
+//            }
+        
+        //premiere face
+        auto itDebut = contours.begin();
+        for (auto it = contours.begin(); it != contours.end(); ++it) {
+            if (is_trigo(vertices[it->aretes.first], v, vertices[it->aretes.second])) {
+                
+                int m = faces.size();
+                vertices[indice_sommet].faceIncidente = m;
+                
+                std::vector<unsigned> sommets_m(3);
+                sommets_m[0] = it->aretes.first;
+                sommets_m[1] = indice_sommet;
+                sommets_m[2] = it->aretes.second;
+                
+                faces.emplace_back(sommets_m, 3);
+                faces[m].facesAdjacentes[0] = -1;
+                faces[m].facesAdjacentes[1] = it->faces; //indice de la face opposée au novueau sommet
+                faces[m].facesAdjacentes[2] = -1;
+                
+                faces[it->faces].facesAdjacentes[(VertexIndexOnFace(vertices[it->aretes.first], faces[it->faces])+2)%faces[it->faces].nbIndicesPerFace] = m;
+                
+                it->aretes.second = sommets_m[1];
+                it->faces = m;
+                
+                Contours newcontours;
+                newcontours.aretes = std::make_pair(sommets_m[1], sommets_m[2]);
+                newcontours.faces = m;
+                itDebut = it;
+                it = contours.insert(++it, newcontours);
+                break;
+            }
+        }
+        if (itDebut == contours.begin()) {
+            auto itl = std::prev(contours.end(),1);
+            //trigo à la fin
+            if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
+                
+                int m = faces.size();
+                
+                std::vector<unsigned> sommets_m(3);
+                sommets_m[0] = itl->aretes.first;
+                sommets_m[1] = indice_sommet;
+                sommets_m[2] = itl->aretes.second;
+                
+                faces.emplace_back(sommets_m, 3);
+                faces[m].facesAdjacentes[0] = contours.begin()->faces;
+                faces[m].facesAdjacentes[1] = itl->faces; //indice de la face opposée au novueau sommet
+                faces[m].facesAdjacentes[2] = -1;
+                
+                //faces adjacentes
+                faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2)% faces[itl->faces].nbIndicesPerFace] = m;
+                faces[itDebut->faces].facesAdjacentes[2] = m;
+                
+                itl->aretes.second = sommets_m[1];
+                itl->faces = m;
+                
+                contours.erase(contours.begin());
+            }
+            
+            while (itl != std::next(itDebut,1)) {
+                if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
+                    
+                    int m = faces.size();
+                    
+                    std::vector<unsigned> sommets_m(3);
+                    sommets_m[0] = itl->aretes.first;
+                    sommets_m[1] = indice_sommet;
+                    sommets_m[2] = itl->aretes.second;
+                    
+                    faces.emplace_back(sommets_m, 3);
+                    faces[m].facesAdjacentes[0] = std::next(itl,1)->faces;
+                    faces[m].facesAdjacentes[1] = itl->faces; //indice de la face opposée au novueau sommet
+                    faces[m].facesAdjacentes[2] = -1;
+                    
+                    faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2)% faces[itl->faces].nbIndicesPerFace] = m;
+                    faces[std::next(itl,1)->faces].facesAdjacentes[2] = m;
+                    
+                    itl->aretes.second = sommets_m[1];
+                    itl->faces = m;
+                    
+                    contours.erase(std::next(itl,1));
+                    
+                } else break;
+                --itl;
+            }
+        }
+        
+        auto itr = itDebut;
+        while (itr != contours.end()) {
+            if (is_trigo(vertices[itr->aretes.first], v, vertices[itr->aretes.second])) {
+                
+                int m = faces.size();
+                
+                std::vector<unsigned> sommets_m(3);
+                sommets_m[0] = itr->aretes.first;
+                sommets_m[1] = indice_sommet;
+                sommets_m[2] = itr->aretes.second;
+                
+                faces.emplace_back(sommets_m, 3);
+                faces[m].facesAdjacentes[0] = -1;
+                faces[m].facesAdjacentes[1] = itr->faces; //indice de la face opposée au novueau sommet
+                faces[m].facesAdjacentes[2] = std::prev(itr,1)->faces;
+                
+                faces[itr->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itr->aretes.first], faces[itr->faces])+2)% faces[itr->faces].nbIndicesPerFace] = m;
+                faces[std::prev(itr,1)->faces].facesAdjacentes[0] = m;
+                
+                itr->aretes.second = sommets_m[1];
+                itr->faces = m;
+                
+                contours.erase(std::next(itr,1));
+                
+            } else break;
+            ++itr;
+        }
+        
+    }
 }
 
 bool Mesh::is_trigo (Vertex a, Vertex b, Vertex c) {
@@ -367,6 +577,7 @@ void Mesh::split_face (int i, unsigned p) {
     // p : indice du point à placer
     
     Face face_i = this->faces[i];
+    
     //sommets de i :
     unsigned a = face_i.indices[0];
     unsigned b = face_i.indices[1];
@@ -416,6 +627,17 @@ void Mesh::split_face (int i, unsigned p) {
         int aDansk = VertexIndexOnFace(vertices[a], faces[k]);
         faces[k].facesAdjacentes[(aDansk + 1)%faces[k].nbIndicesPerFace] = m+1;
     }
+    
+    //contours
+    for (auto it = contours.begin(); it != contours.end(); ++it) {
+        if (it->aretes.first == faces[i].indices[1] && it->aretes.second == faces[i].indices[2])
+            it->faces = i;
+        else if (it->aretes.first == faces[m].indices[1] && it->aretes.second == faces[m].indices[2])
+            it->faces = m;
+        else if (it->aretes.first == faces[m+1].indices[1] && it->aretes.second == faces[m+1].indices[2])
+            it->faces = m+1;
+    }
+    
 }
 
 void Mesh::flip (int i, unsigned a) {
