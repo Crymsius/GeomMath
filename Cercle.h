@@ -1,10 +1,10 @@
 #ifndef CERCLE_H
 #define CERCLE_H
-#include "Vector3.h"
+#include "Point.h"
 
 class Cercle {
-    Vector3 centre;
-
+    Point a,b,c;
+    bool isInCercle(const Point p);
 };
 
 #endif

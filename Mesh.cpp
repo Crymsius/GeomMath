@@ -407,43 +407,6 @@ void Mesh::inserer_sommet(Vertex v) {
     //insertion sommet + premiere face
     if (i == faces.size()) {
         
-//        std::pair<unsigned, unsigned> previous = std::make_pair(0, 0);
-//        for (auto it = contours.begin(); it != contours.end(); ++it) {
-//            if (is_trigo(vertices[it->aretes.first], v, vertices[it->aretes.second])) {
-//                
-//                int m = faces.size();
-//                
-//                std::vector<unsigned> sommets_m(3);
-//                sommets_m[0] = it->aretes.first;
-//                sommets_m[1] = indice_sommet;
-//                sommets_m[2] = it->aretes.second;
-//                
-//                faces.emplace_back(sommets_m, 3);
-//                faces[m].facesAdjacentes[0] = -1;
-//                faces[m].facesAdjacentes[1] = it->faces; //indice de la face opposée au novueau sommet
-//                faces[m].facesAdjacentes[2] = -1;
-//                
-//                if (previous == std::make_pair(sommets_m[1], sommets_m[0])) {
-//                    it = contours.erase(--it);
-//                    it = contours.erase(it);
-//                    
-//                    previous.first = 0;
-//                    previous.second = 0;
-//                } else {
-//                    it->aretes.first = sommets_m[0];
-//                    it->aretes.second = sommets_m[1];
-//                    it->faces = m;
-//                    
-//                    previous.first = sommets_m[1];
-//                    previous.second = sommets_m[2];
-//                }
-//                Contours newcontours;
-//                newcontours.aretes = std::make_pair(sommets_m[1], sommets_m[2]);
-//                newcontours.faces = m;
-//                
-//                it = contours.insert(++it, newcontours);
-//            }
-        
         //premiere face
         auto itDebut = contours.begin();
         for (auto it = contours.begin(); it != contours.end(); ++it) {
