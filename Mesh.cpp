@@ -139,10 +139,13 @@ Circulateur_de_sommets& Circulateur_de_sommets::operator=(const Circulateur_de_s
 
 
 Circulateur_de_sommets& Circulateur_de_sommets::operator++() {
-//A FINIR
-    //    //sommet_parent->sommet_courant en sens trigo
-//    (mesh._Faces()[sommet_courant.faceIncidente].
-//    sommet_courant
+    // vertex index on the current face
+    auto& current_vertex = mesh->vertices[sommet_courant];
+    
+    const auto& current_face = mesh->faceFromPair(*sommet_parent, current_vertex);
+    const auto& vertex_index = mesh->VertexIndexOnFace(current_vertex, mesh->faces[current_face]);
+    
+    sommet_courant = (vertex_index + 1) % mesh->faces[current_face].nbIndicesPerFace;
     return *this;
 }
 
@@ -153,36 +156,6 @@ unsigned Circulateur_de_sommets::operator*() const {
 Circulateur_de_sommets Mesh::sommets_adjacents(const Vertex& v) const {
     return Circulateur_de_sommets (*this, v);
 }
-
-//
-//Circulateur_de_contours::Circulateur_de_contours (const Mesh& mesh_associe) :
-//    mesh(std::make_shared<Mesh>(mesh_associe)),
-//    it_contours(mesh->contours.begin())
-//{}
-//
-//Circulateur_de_contours& Circulateur_de_contours::operator=(const Circulateur_de_contours& rhs){
-//    if (this == &rhs)
-//        return *this;
-//    mesh = rhs.mesh;
-//    it_contours= rhs.it_contours;
-//    return *this;
-//}
-//Circulateur_de_contours& Circulateur_de_contours::operator++() {
-//    if (++it_contours == mesh->_Contours().end()) {
-//        auto it = mesh->_Contours().begin();
-//        it_contours = it;
-//    }
-//    else
-//        ++it_contours;
-//    return *this;
-//}
-//Circulateur_de_contours& Circulateur_de_contours::operator--() {
-//    if (--it_contours == mesh->_Contours().begin())
-//        it_contours = mesh->_Contours().end();
-//    else
-//        --it_contours;
-//    return *this;
-//}
 
 /*MESH*/
 Iterateur_de_sommets Mesh::sommets_debut() {
@@ -386,6 +359,16 @@ int Mesh::VertexIndexOnFace (const Vertex& vertex, const Face& face) const {
     return -1;
 }
 
+int Mesh::faceFromPair(const Vertex& v1, const Vertex& v2) const {
+    for (int i = 0; i < faces.size(); ++i) {
+        for (int j = 0; j < faces[i].nbIndicesPerFace ; ++i) {
+            if (faces[i].indices[j] == VertexIndexOnFace(v1, faces[i]) &&
+                faces[i].indices[(j+1) % faces[i].nbIndicesPerFace] == VertexIndexOnFace(v2, faces[i]))
+                return i;
+        }
+    }
+    return -1;
+}
 void Mesh::inserer_sommet(Vertex v) {
     
     unsigned indice_sommet = (unsigned) vertices.size();
@@ -522,6 +505,10 @@ void Mesh::inserer_sommet(Vertex v) {
         }
         
     }
+}
+
+void Mesh::lawson () {
+    return;
 }
 
 bool Mesh::is_trigo (Vertex a, Vertex b, Vertex c) {

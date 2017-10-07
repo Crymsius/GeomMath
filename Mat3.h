@@ -64,13 +64,13 @@ Mat3<T> operator+(const Mat3<T>& mat1, const Mat3<T>& mat2) {
 
 //methods
 template<typename T>
-T det(const Mat3<T>& mat) {
+T determinant(const Mat3<T>& mat) {
     return mat.a00*(mat.a11*mat.a22-mat.a12*mat.a21) - mat.a01*(mat.a10*mat.a22-mat.a12*mat.a20) + mat.a02*(mat.a10*mat.a21-mat.a11*mat.a20);
 }
 
 template<typename T>
 T Mat3<T>::det() {
-    return det(*this);
+    return determinant(*this);
 }
 
 

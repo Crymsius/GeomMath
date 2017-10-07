@@ -83,7 +83,9 @@ private:
     std::shared_ptr<Mesh> mesh;
     std::shared_ptr<Vertex> sommet_parent; //sommet autour duquel on tourne
     unsigned sommet_courant; //sommet courant
+    unsigned face_courante; //sommet courant
     unsigned premier_sommet; //premier sommet
+
 public:
     Circulateur_de_sommets ();
     Circulateur_de_sommets (const Mesh& mesh_associe, const Vertex& v); // constructor
@@ -105,17 +107,6 @@ public:
         return !( lhs == rhs );
     }
 };
-//
-//class Circulateur_de_contours {
-//private:
-//    std::shared_ptr<Mesh> mesh;
-//    std::list<unsigned>::iterator it_contours;
-//public:
-//    Circulateur_de_contours (const Mesh& mesh_associe);
-//    Circulateur_de_contours& operator=(const Circulateur_de_contours& other);  // assignment
-//    Circulateur_de_contours& operator++();
-//    Circulateur_de_contours& operator--();
-//};
 
 class Mesh {
 public:
@@ -140,8 +131,11 @@ public:
         unsigned faces;
     };
     
+    void lawson ();
+    
 private:
     friend class Circulateur_de_faces;
+    friend class Circulateur_de_sommets;
     
     std::vector<Vertex> vertices; /// Sommets du maillage
     std::vector<Face> faces; /// Faces du maillage
@@ -149,7 +143,8 @@ private:
     
 
     int VertexIndexOnFace(const Vertex& vertex, const Face& face) const;
- 
+    int faceFromPair(const Vertex& v1, const Vertex& v2) const;
+    
     bool is_trigo (Vertex a, Vertex b, Vertex c);
     bool is_in_triangle (Face f, Vertex v);
     
