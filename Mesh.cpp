@@ -1,10 +1,12 @@
 #include "Mesh.h"
+#include "Cercle.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <iterator>
 #include <algorithm>
 #include <memory>
+#include <queue>
 using std::pair;
 
 /*ITERATEUR_DE_FACES*/
@@ -508,6 +510,132 @@ void Mesh::inserer_sommet(Vertex v) {
 }
 
 void Mesh::lawson () {
+    //file des paires <face, sommet opposé à l'autre face>
+    std::queue<std::pair<int,unsigned>> file, fileCopy;
+    for (auto i = 0; i < this->faces.size(); ++i) {
+        for (auto j = 0; j < this->faces[i].nbIndicesPerFace; ++j) {
+            //face adjacente j
+            int facej = this->faces[i].facesAdjacentes[j];
+            
+            //pas sur le contours
+            if (facej!= -1) {
+                //premier sommet de l'arête
+                unsigned a = (j+1) % this->faces[i].nbIndicesPerFace;
+                //sommet à tester
+                unsigned p = this->faces[facej].indices[(VertexIndexOnFace(this->vertices[a], this->faces[facej]) + 1) % this->faces[facej].nbIndicesPerFace];
+                Cercle cercle(this->faces[i], *this);
+                if (cercle.isInCercle(this->vertices[p].position)) {
+                    //test si l'arête existe déjà
+                    fileCopy = file;
+                    while (!fileCopy.empty()) {
+                        if (fileCopy.front().first == facej && fileCopy.front().second == p)
+                            break;
+                        fileCopy.pop();
+                    }
+                    if (fileCopy.empty())
+                        file.push(std::make_pair(i, this->faces[i].indices[j]));
+                }
+            }
+        }
+    }
+    
+    //flip des arêtes dans la liste
+    while (!file.empty()) {
+        //face i
+        int i = file.front().first;
+        //sommet opposé à l'autre face
+        unsigned a = file.front().second;
+        int aDansi = VertexIndexOnFace(this->vertices[a], this->faces[i]);
+        
+        //face j (opposée à i par l'arête flippée)
+        int j = this->faces[i].facesAdjacentes[aDansi];
+        
+        flip (i, a);
+        file.pop();
+        
+        //sommet opposé
+        unsigned c;
+        
+        //cercle de la face i
+        Cercle cercleI(this->faces[i], *this);
+        //face opposée à a
+        int m = this->faces[i].facesAdjacentes[aDansi];
+        //sommet de l'arête
+        unsigned b = this->faces[i].indices[(aDansi+1) % this->faces[i].nbIndicesPerFace];
+        if (m != -1) {
+            int bDansm = VertexIndexOnFace(this->vertices[b], this->faces[m]);
+            c = this->faces[m].indices[(bDansm+1) % this->faces[m].nbIndicesPerFace];
+            if (cercleI.isInCercle(this->vertices[c].position)) {
+                //test si l'arête existe déjà
+                fileCopy = file;
+                while (!fileCopy.empty()) {
+                    if (fileCopy.front().first == m && fileCopy.front().second == c)
+                        break;
+                    fileCopy.pop();
+                }
+                if (fileCopy.empty())
+                    file.push(std::make_pair(i, a));
+            }
+        }
+        // face opposée à a+2
+        m = this->faces[i].facesAdjacentes[(aDansi+2)% this->faces[i].nbIndicesPerFace];
+        if (m != -1) {
+            int bDansm = VertexIndexOnFace(this->vertices[b], this->faces[m]);
+            c = this->faces[m].indices[(bDansm+2) % this->faces[m].nbIndicesPerFace];
+            if (cercleI.isInCercle(this->vertices[c].position)) {
+                //test si l'arête existe déjà
+                fileCopy = file;
+                while (!fileCopy.empty()) {
+                    if (fileCopy.front().first == m && fileCopy.front().second == c)
+                        break;
+                    fileCopy.pop();
+                }
+                if (fileCopy.empty())
+                    file.push(std::make_pair(i, this->faces[i].indices[(aDansi+2)% this->faces[i].nbIndicesPerFace]));
+            }
+        }
+        
+        int aDansj = VertexIndexOnFace(this->vertices[a], this->faces[j]);
+        
+        //cercle de la face j
+        Cercle cercleJ(this->faces[j], *this);
+        //face opposée à a+1
+        int n = this->faces[j].facesAdjacentes[(aDansj+1)%this->faces[j].nbIndicesPerFace];
+        //sommet de l'arête
+        unsigned d = this->faces[j].indices[(aDansj+2) % this->faces[j].nbIndicesPerFace];
+        if (n != -1) {
+            int dDansn = VertexIndexOnFace(this->vertices[d], this->faces[n]);
+            c = this->faces[n].indices[(dDansn+1) % this->faces[n].nbIndicesPerFace];
+            if (cercleJ.isInCercle(this->vertices[c].position)) {
+                //test si l'arête existe déjà
+                fileCopy = file;
+                while (!fileCopy.empty()) {
+                    if (fileCopy.front().first == n && fileCopy.front().second == c)
+                        break;
+                    fileCopy.pop();
+                }
+                if (fileCopy.empty())
+                    file.push(std::make_pair(j, this->faces[j].indices[(aDansj+1)% this->faces[j].nbIndicesPerFace]));
+            }
+        }
+        // face opposée à a
+        n = this->faces[j].facesAdjacentes[aDansj];
+        if (n != -1) {
+            int dDansn = VertexIndexOnFace(this->vertices[d], this->faces[n]);
+            c = this->faces[n].indices[(dDansn+2) % this->faces[n].nbIndicesPerFace];
+            if (cercleJ.isInCercle(this->vertices[c].position)) {
+                //test si l'arête existe déjà
+                fileCopy = file;
+                while (!fileCopy.empty()) {
+                    if (fileCopy.front().first == n && fileCopy.front().second == c)
+                        break;
+                    fileCopy.pop();
+                }
+                if (fileCopy.empty())
+                    file.push(std::make_pair(j, a));
+            }
+        }
+    }
     return;
 }
 

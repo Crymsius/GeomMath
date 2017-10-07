@@ -17,7 +17,7 @@ int main(void) {
     
 //    Circulateur_de_faces cf(mesh, mesh._Vertices()[0]);
 //    mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.off");
-    mesh.ReadFromPoints("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.points");
+    mesh.ReadFromPoints("test.points");
 //      mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/cube.off");
 //    mesh.ReadFromOFF("/Users/crymsius/Desktop/Boulot/Master/ID3D/MGA/TP/DisplayMesh/DisplayMesh/queen.off");
 
@@ -49,6 +49,7 @@ int main(void) {
 //    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 //    olog(Info) << "Trouver l'indice du sommet sur la face incidente prend " << duration;
 //#endif
+    mesh.lawson();
     
     return 0;
 }
