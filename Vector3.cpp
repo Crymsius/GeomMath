@@ -1,11 +1,26 @@
 #include "Vector3.h"
 
-Vector3::Vector3() : x(), y(), z() {};
+Vector3::Vector3() : x(0), y(0), z(0) {};
 
 Vector3::Vector3(float x, float y, float z) {
     this->x = x;
     this->y = y;
     this->z = z;
+}
+
+Vector3::Vector3(const Vector3& coordinates) {
+    this->x = coordinates.x;
+    this->y = coordinates.y;
+    this->z = coordinates.z;
+}
+
+Vector3& Vector3::operator=(const Vector3& rhs) {
+    if (this == &rhs)
+        return *this;
+    x = rhs.x;
+    y = rhs.y;
+    z = rhs.z;
+    return *this;
 }
 
 bool Vector3::operator==(const Vector3 &rhs) const {
@@ -41,5 +56,11 @@ Vector3& Vector3::operator*(float scalar) {
     this->x *= scalar ;
     this->y *= scalar ;
     this->z *= scalar ;
+    return *this;
+}
+Vector3& Vector3::operator/(float scalar) {
+    this->x /= scalar ;
+    this->y /= scalar ;
+    this->z /= scalar ;
     return *this;
 }

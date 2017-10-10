@@ -13,6 +13,7 @@ public:
     
     //methods
     bool isInCercle(const Point p);
+    Point centre();
     
 private:
     Point a,b,c;

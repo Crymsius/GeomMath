@@ -28,3 +28,10 @@ bool Cercle::isInCercle(const Point p) {
     
     return det > 0;
 }
+
+Point Cercle::centre() {
+    float D = 2 * (a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y));
+    float x = (((a.x * a.x)+(a.y * a.y))*(b.y - c.y) + ((b.x * b.x)+(b.y * b.y))*(c.y - a.y) + ((c.x * c.x)+(c.y * c.y))*(a.y - b.y))/D;
+    float y = (((a.x * a.x)+(a.y * a.y))*(c.x - b.x) + ((b.x * b.x)+(b.y * b.y))*(a.x - c.x) + ((c.x * c.x)+(c.y * c.y))*(b.x - a.x))/D;
+    return Point(x,y,0.f);
+}
