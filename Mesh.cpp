@@ -268,6 +268,9 @@ void Mesh::ReadFromPoints(const std::string & path) {
     }
     catch (std::ifstream::failure& error) {
         //todo : log error
+        std::cout << "Caught an ios_base::failure.\n"
+        << "Explanatory string: " << error.what() << '\n'
+        << "Error code: " << error.code() << '\n';
         input_stream.close();
     }
     
@@ -352,6 +355,18 @@ const std::vector<Face> &Mesh::_Faces() const {
     return faces;
 }
 
+int Mesh::VertexIndex(const int f, const int i) const {
+    return faces[f].indices[i];
+}
+
+int Mesh::NextVertexIndex(const int f, const int i) const {
+    return faces[f].indices[(i+1) % 3];
+}
+
+int Mesh::PrevVertexIndex(const int f, const int i) const {
+    return faces[f].indices[(i-1) % 3];
+}
+
 int Mesh::VertexIndexOnFace (const Vertex& vertex, const Face& face) const {
     for (int i = 0; i < face.nbIndicesPerFace; ++i) {
         if (vertices[face.indices[i]].position == vertex.position) {
@@ -371,8 +386,35 @@ int Mesh::faceFromPair(const Vertex& v1, const Vertex& v2) const {
     }
     return -1;
 }
+
+int Mesh::locatePointInFace(const Vertex v) {
+    int f = 0;
+    //wip
+    while (!is_in_triangle(faces[f], v) || f == -1) {
+        for (int i = 0; i < faces[f].nbIndicesPerFace; ++i) {
+            if (!is_trigo(vertices[faces[f].indices[i]],
+                          vertices[faces[f].indices[(i+1) % faces[f].nbIndicesPerFace]],
+                           v)) {
+                f = faces[f].facesAdjacentes[(i+2) % faces[f].nbIndicesPerFace];
+                break;
+            }
+        }
+    }
+    return f;
+}
+
 void Mesh::inserer_sommet(Vertex v) {
     
+    auto itcout = contours.begin();
+    int indexContour = 0;
+    std::cout << "------ Debut ----\n" << std::endl;
+    while (itcout != contours.end()){
+        std::cout << "indexContour : " << indexContour << std::endl;
+        std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n" << std::endl;
+        indexContour++;
+        itcout++;
+    }
+
     unsigned indice_sommet = (unsigned) vertices.size();
     
     //ajout du vertex dans le mesh
@@ -388,12 +430,23 @@ void Mesh::inserer_sommet(Vertex v) {
         }
     }
   
+    itcout = contours.begin();
+    indexContour = 0;
+    std::cout << "------ En dehors ----\n" << std::endl;
+    while (itcout != contours.end()){
+        std::cout << "indexContour : " << indexContour << std::endl;
+        std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n" << std::endl;
+        indexContour++;
+        itcout++;
+    }
+
     //c'est en dehors
     //insertion sommet + premiere face
     if (i == faces.size()) {
-        
         //premiere face
         auto itDebut = contours.begin();
+        auto itFin = contours.end();
+        auto itr = contours.begin();
         for (auto it = contours.begin(); it != contours.end(); ++it) {
             if (is_trigo(vertices[it->aretes.first], v, vertices[it->aretes.second])) {
                 
@@ -420,9 +473,21 @@ void Mesh::inserer_sommet(Vertex v) {
                 newcontours.faces = m;
                 itDebut = it;
                 it = contours.insert(++it, newcontours);
+                itr = it;
                 break;
             }
         }
+    
+        auto itcout = contours.begin();
+        int indexContour = 0;
+        std::cout << "------ Premiere Droite ----\n" << std::endl;
+        while (itcout != contours.end()){
+            std::cout << "indexContour : " << indexContour << std::endl;
+            std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n" << std::endl;
+            indexContour++;
+            itcout++;
+        }
+        
         if (itDebut == contours.begin()) {
             auto itl = std::prev(contours.end(),1);
             //trigo à la fin
@@ -441,77 +506,122 @@ void Mesh::inserer_sommet(Vertex v) {
                 faces[m].facesAdjacentes[2] = -1;
                 
                 //faces adjacentes
-                faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2)% faces[itl->faces].nbIndicesPerFace] = m;
+                faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2) % 3] = m;
                 faces[itDebut->faces].facesAdjacentes[2] = m;
                 
                 itl->aretes.second = sommets_m[1];
                 itl->faces = m;
-                
+                std::cout << "\n\nbegin supprimé : " << contours.begin()->aretes.first << " " << contours.begin()->aretes.second << "\n" << std::endl;
                 contours.erase(contours.begin());
+                
+                auto itcout = contours.begin();
+                int indexContour = 0;
+                std::cout << "------Première Gauche ----\n" << std::endl;
+                std::cout << "itl : " << itl->aretes.first << " " << itl->aretes.second << "\n"<< std::endl;
+                while (itcout != contours.end()){
+                    std::cout << "indexContour : " << indexContour << std::endl;
+                    std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n" << std::endl;
+                    indexContour++;
+                    itcout++;
+                }
+
+                while (itl != std::next(itDebut,1)) {
+                    std::cout << "------Pre Itl ----\n" << std::endl;
+                    itl--;
+                    std::cout << "itl : " << itl->aretes.first << " " << itl->aretes.second << "\n"<< std::endl;
+                    if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
+                        
+                        int m = faces.size();
+                        
+                        std::vector<unsigned> sommets_m(3);
+                        sommets_m[0] = itl->aretes.first;
+                        sommets_m[1] = indice_sommet;
+                        sommets_m[2] = itl->aretes.second;
+                        
+                        faces.emplace_back(sommets_m, 3);
+                        faces[m].facesAdjacentes[0] = std::next(itl,1)->faces;
+                        faces[m].facesAdjacentes[1] = itl->faces; //indice de la face opposée au novueau sommet
+                        faces[m].facesAdjacentes[2] = -1;
+                        
+                        faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2) % 3] = m;
+                        faces[std::next(itl,1)->faces].facesAdjacentes[2] = m;
+                        
+                        itl->aretes.second = sommets_m[1];
+                        itl->faces = m;
+                        
+                        std::cout << "\n\nitl supprimé : " << std::next(itl,1)->aretes.first << " " << std::next(itl,1)->aretes.second << "\n" << std::endl;
+                        
+                        contours.erase(std::next(itl,1));
+                        
+                    } else break;
+                    --itl;
+                }
             }
-            
-            while (itl != std::next(itDebut,1)) {
-                if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
-                    
+        }
+        
+        itcout = contours.begin();
+        indexContour = 0;
+        std::cout << "------Pre-itr ----\n" << std::endl;
+        std::cout << "itr : " << itr->aretes.first << " " << itr->aretes.second << "\n"<< std::endl;
+        while (itcout != contours.end()){
+            std::cout << "indexContour : " << indexContour << std::endl;
+            std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n"<< std::endl;
+            indexContour++;
+            itcout++;
+        }
+        std::cout << "----prev-end----\n"<< std::endl;
+        std::cout << std::prev(contours.end(),1)->aretes.first << " " << std::prev(contours.end(),1)->aretes.second << "\n"<< std::endl;
+        
+        if (itr != std::prev(contours.end(),1)) {
+            itr = std::next(itr, 1);
+            while (itr != contours.end()) {
+                if (is_trigo(vertices[itr->aretes.first], v, vertices[itr->aretes.second])) {
+
                     int m = faces.size();
-                    
+
                     std::vector<unsigned> sommets_m(3);
-                    sommets_m[0] = itl->aretes.first;
+                    sommets_m[0] = itr->aretes.first;
                     sommets_m[1] = indice_sommet;
-                    sommets_m[2] = itl->aretes.second;
-                    
+                    sommets_m[2] = itr->aretes.second;
+
                     faces.emplace_back(sommets_m, 3);
-                    faces[m].facesAdjacentes[0] = std::next(itl,1)->faces;
-                    faces[m].facesAdjacentes[1] = itl->faces; //indice de la face opposée au novueau sommet
-                    faces[m].facesAdjacentes[2] = -1;
+                    faces[m].facesAdjacentes[0] = -1;
+                    faces[m].facesAdjacentes[1] = itr->faces; //indice de la face opposée au nouveau sommet
+                    faces[m].facesAdjacentes[2] = std::prev(itr,1)->faces;
+
+                    faces[itr->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itr->aretes.first], faces[itr->faces])+2) % 3] = m;
+                    faces[std::prev(itr,1)->faces].facesAdjacentes[0] = m;
                     
-                    faces[itl->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itl->aretes.first], faces[itl->faces])+2)% faces[itl->faces].nbIndicesPerFace] = m;
-                    faces[std::next(itl,1)->faces].facesAdjacentes[2] = m;
+                    itr->aretes.first = sommets_m[1];
+                    itr->faces = m;
                     
-                    itl->aretes.second = sommets_m[1];
-                    itl->faces = m;
-                    
-                    contours.erase(std::next(itl,1));
+                    contours.erase(std::prev(itr,1));
                     
                 } else break;
-                --itl;
+                ++itr;
+            }
+            std::cout << "------Post-itr ----\n"<< std::endl;
+            auto itcout = contours.begin();
+            int indexContour = 0;
+            while (itcout != contours.end()){
+                std::cout << "indexContour : " << indexContour << std::endl;
+                std::cout << "itcout : " << itcout->aretes.first << " " << itcout->aretes.second << "\n" << std::endl;
+                indexContour++;
+                itcout++;
             }
         }
-        
-        auto itr = itDebut;
-        while (itr != contours.end()) {
-            if (is_trigo(vertices[itr->aretes.first], v, vertices[itr->aretes.second])) {
-                
-                int m = faces.size();
-                
-                std::vector<unsigned> sommets_m(3);
-                sommets_m[0] = itr->aretes.first;
-                sommets_m[1] = indice_sommet;
-                sommets_m[2] = itr->aretes.second;
-                
-                faces.emplace_back(sommets_m, 3);
-                faces[m].facesAdjacentes[0] = -1;
-                faces[m].facesAdjacentes[1] = itr->faces; //indice de la face opposée au novueau sommet
-                faces[m].facesAdjacentes[2] = std::prev(itr,1)->faces;
-                
-                faces[itr->faces].facesAdjacentes[(VertexIndexOnFace(vertices[itr->aretes.first], faces[itr->faces])+2)% faces[itr->faces].nbIndicesPerFace] = m;
-                faces[std::prev(itr,1)->faces].facesAdjacentes[0] = m;
-                
-                itr->aretes.second = sommets_m[1];
-                itr->faces = m;
-                
-                contours.erase(std::next(itr,1));
-                
-            } else break;
-            ++itr;
+        else {
+            std::cout<<"-----------dépassement-------------"<< std::endl;
         }
-        
+    }
+    else {
+        std::cout<<"-----------i!= face.size-------------" << std::endl;
     }
 }
 
 void Mesh::lawson () {
     //file des paires <face, sommet opposé à l'autre face>
-    std::queue<std::pair<int,unsigned>> file, fileCopy;
+    std::queue<std::pair<int,unsigned>> file, fileCopy, fileHanoi;
     for (auto i = 0; i < this->faces.size(); ++i) {
         for (auto j = 0; j < this->faces[i].nbIndicesPerFace; ++j) {
             //face adjacente j
@@ -550,6 +660,40 @@ void Mesh::lawson () {
         //face j (opposée à i par l'arête flippée)
         int j = this->faces[i].facesAdjacentes[aDansi];
         
+        //parcourt de la liste et echange de la face avec sa face opposée si c'est celle à flip
+        file.push(std::make_pair(file.front().first, file.front().second));
+        file.pop();
+        for (int l = 1; l < file.size(); l++) {
+            if (file.front().first == i) {
+                int newface = this->faces[i].facesAdjacentes[VertexIndexOnFace(this->vertices[file.front().second], this->faces[i])];
+                unsigned indexOppose;
+                for (unsigned k = 0; k < 3; ++k) {
+                    if (this->faces[newface].facesAdjacentes[k] == i) {
+                        indexOppose = k;
+                        break;
+                    }
+                }
+                unsigned newvertex = this->faces[newface].indices[indexOppose];
+                file.front().first = newface;
+                file.front().second = newvertex;
+            } else if (file.front().first == j) {
+                int newface = this->faces[j].facesAdjacentes[VertexIndexOnFace(this->vertices[file.front().second], this->faces[j])];
+                unsigned indexOppose;
+                for (unsigned k = 0; k < 3; ++k) {
+                    if (this->faces[newface].facesAdjacentes[k] == j) {
+                        indexOppose = k;
+                        break;
+                    }
+                }
+                unsigned newvertex = this->faces[newface].indices[indexOppose];
+                file.front().first = newface;
+                file.front().second = newvertex;
+            }
+            file.push(std::make_pair(file.front().first, file.front().second));
+            file.pop();
+        }
+        
+        
         flip (i, a);
         file.pop();
         
@@ -561,10 +705,10 @@ void Mesh::lawson () {
         //face opposée à a
         int m = this->faces[i].facesAdjacentes[aDansi];
         //sommet de l'arête
-        unsigned b = this->faces[i].indices[(aDansi+1) % this->faces[i].nbIndicesPerFace];
+        unsigned b = this->NextVertexIndex(i, aDansi);
         if (m != -1) {
             int bDansm = VertexIndexOnFace(this->vertices[b], this->faces[m]);
-            c = this->faces[m].indices[(bDansm+1) % this->faces[m].nbIndicesPerFace];
+            c = this->NextVertexIndex(m, bDansm);
             if (cercleI.isInCercle(this->vertices[c].position)) {
                 //test si l'arête existe déjà
                 fileCopy = file;
@@ -698,12 +842,12 @@ void Mesh::split_face (int i, unsigned p) {
     
     if (j != -1) {
         int aDansj = VertexIndexOnFace(vertices[a], faces[j]);
-        faces[j].facesAdjacentes[(aDansj + 2)%faces[j].nbIndicesPerFace] = m;
+        faces[j].facesAdjacentes[(aDansj + 2) % 3] = m;
     }
     
     if (k != -1) {
         int aDansk = VertexIndexOnFace(vertices[a], faces[k]);
-        faces[k].facesAdjacentes[(aDansk + 1)%faces[k].nbIndicesPerFace] = m+1;
+        faces[k].facesAdjacentes[(aDansk + 1) % 3] = m+1;
     }
     
     //contours

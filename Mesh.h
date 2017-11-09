@@ -124,6 +124,7 @@ public:
     
     Circulateur_de_faces faces_incidentes(const Vertex& v) const;
     Circulateur_de_sommets sommets_adjacents(const Vertex& v) const;
+    
   
     void inserer_sommet (Vertex v);
     struct Contours {
@@ -141,9 +142,13 @@ private:
     std::vector<Face> faces; /// Faces du maillage
     std::list<Contours> contours; ///  contour
     
-
+    int VertexIndex(const int f, const int i) const;
+    int NextVertexIndex(const int f, const int i) const;
+    int PrevVertexIndex(const int f, const int i) const;
+    
     int VertexIndexOnFace(const Vertex& vertex, const Face& face) const;
     int faceFromPair(const Vertex& v1, const Vertex& v2) const;
+    int locatePointInFace(const Vertex v);
     
     bool is_trigo (Vertex a, Vertex b, Vertex c);
     bool is_in_triangle (Face f, Vertex v);
