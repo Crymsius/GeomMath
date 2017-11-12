@@ -49,7 +49,16 @@ int main(void) {
 //    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 //    olog(Info) << "Trouver l'indice du sommet sur la face incidente prend " << duration;
 //#endif
-    mesh.lawson();
+    mesh.lawsonAll();
+    Vertex v;
+    v.position.x = - 0.38;
+    v.position.y = 0.2;
+    v.position.z = 0.;
     
+    std::cout <<"avant insertion" << std::endl;
+    
+    mesh.inserer_sommet_delaunay_incr(v);
+    
+    std::cout <<"fini" << std::endl;
     return 0;
 }

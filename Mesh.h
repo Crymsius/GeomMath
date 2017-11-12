@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <queue>
 #include "Face.h"
 #include "Vertex.h"
 
@@ -127,12 +128,15 @@ public:
     
   
     void inserer_sommet (Vertex v);
+    void inserer_sommet_delaunay_incr(Vertex v);
     struct Contours {
         std::pair<unsigned, unsigned> aretes;
         unsigned faces;
     };
     
-    void lawson ();
+    void lawsonAll ();
+    void lawsonQueue(std::queue<std::pair<int,unsigned>> file);
+    std::queue<std::pair<int,unsigned>> findAretesToFlip();
     
 private:
     friend class Circulateur_de_faces;
@@ -154,6 +158,7 @@ private:
     bool is_in_triangle (Face f, Vertex v);
     
     void split_face (int face, unsigned p);
+    void split_face_delaunay_incr (int face, unsigned p);
     void flip (int face, unsigned oppArete);
 };
 #endif
