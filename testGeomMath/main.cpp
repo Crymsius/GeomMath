@@ -13,14 +13,22 @@
 int main(void) {
     Mesh mesh;
 //    Iterateur_de_sommets its = mesh.sommets_debut();
-    Circulateur_de_faces cf;
+//    Circulateur_de_faces cf;
+//    mesh.ReadFromPoints("coeur.points");
+    mesh.ReadFromPoints("test_crust/line1.points");
+//    Vertex v = mesh._Vertices()[0];
     
-//    Circulateur_de_faces cf(mesh, mesh._Vertices()[0]);
+//    Circulateur_de_faces cf = mesh.faces_incidentes(v);
 //    mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/test.off");
-    mesh.ReadFromPoints("test.points");
 //      mesh.ReadFromOFF("/Users/crymsius/Documents/Xcode/GeomMath/testGeomMath/cube.off");
 //    mesh.ReadFromOFF("/Users/crymsius/Desktop/Boulot/Master/ID3D/MGA/TP/DisplayMesh/DisplayMesh/queen.off");
 
+//    ++cf;
+//    while(*cf != cf.premiere_face) {
+//        std::cout << *cf << std::endl;
+//        ++cf;
+//    }
+    
 //    for (its = mesh.sommets_debut(); its != mesh.sommets_fin(); ++its) {
 //        std::cout << (*its).position.x << " "<< (*its).position. y << " " << (*its).position.z << std::endl ;
 //    }
@@ -49,16 +57,22 @@ int main(void) {
 //    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 //    olog(Info) << "Trouver l'indice du sommet sur la face incidente prend " << duration;
 //#endif
+
+    
     mesh.lawsonAll();
+    
     Vertex v;
-    v.position.x = - 0.38;
-    v.position.y = 0.2;
+    v.position.x = - 0.80625;
+    v.position.y = 0.9625;
     v.position.z = 0.;
     
     std::cout <<"avant insertion" << std::endl;
     
     mesh.inserer_sommet_delaunay_incr(v);
     
+//    Shape shape;
+//    shape = mesh.crust();
+
     std::cout <<"fini" << std::endl;
     return 0;
 }

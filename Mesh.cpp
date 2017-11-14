@@ -99,9 +99,45 @@ Circulateur_de_faces& Circulateur_de_faces::operator++ () {
         // if the left edge of the current face is the right edge of the adjacent face
         if (current_face.indices[(vertex_index + 2) % 3] == adjacent_face.indices[(v_index + 1) % 3]) {
             face_courante = i;
-        return *this;
+            return *this;
         }
     }
+    //cas où face -1 : on repart au début
+    auto itc = mesh->faces_incidentes(*sommet_parent);
+    while (face_courante != -1) {
+        --itc;
+    }
+    face_courante = itc.face_courante;
+    return *this;
+}
+
+Circulateur_de_faces& Circulateur_de_faces::operator-- () {
+    //face incidente de parent + 1
+    
+    // vertex index on the current face
+    auto& current_face = mesh->faces[face_courante];
+    
+    const auto& vertex_index = mesh->VertexIndexOnFace(*sommet_parent, current_face);
+    // for each adjacent faces
+    for (auto& i : current_face.facesAdjacentes) {
+        auto& adjacent_face = mesh->faces[i];
+        const auto v_index = mesh->VertexIndexOnFace(*sommet_parent, adjacent_face);
+        // if the vertex isn't part of the face, we continue on the next adjacent face
+        if (v_index == -1)
+            continue;
+        // if the left edge of the current face is the right edge of the adjacent face
+        if (current_face.indices[(vertex_index + 1) % 3] == adjacent_face.indices[(v_index + 2) % 3]) {
+            face_courante = i;
+            return *this;
+        }
+    }
+    
+    //cas où face -1 : aler à la fin
+//    auto itc = mesh->faces_incidentes(*sommet_parent);
+//    while (face_courante != -1) {
+//        ++itc;
+//    }
+//    face_courante = itc.face_courante;
     return *this;
 }
 
@@ -118,15 +154,22 @@ Circulateur_de_sommets::Circulateur_de_sommets () :
     mesh(nullptr),
     sommet_parent(nullptr),
     sommet_courant(0),
-    premier_sommet(sommet_courant)
+    premier_sommet(sommet_courant),
+    face_courante(0)
 {}
 
 Circulateur_de_sommets::Circulateur_de_sommets (const Mesh& mesh_associe, const Vertex& v) :
     mesh(std::make_shared<Mesh>(mesh_associe)),
     sommet_parent(std::make_shared<Vertex>(v)),
     sommet_courant(mesh_associe._Faces()[v.faceIncidente].indices[0]),
-    premier_sommet(sommet_courant)
-{}
+    premier_sommet(sommet_courant),
+    face_courante(v.faceIncidente)
+{
+    if (mesh_associe._Vertices()[mesh_associe._Faces()[v.faceIncidente].indices[0]].position == v.position) {
+        sommet_courant = mesh_associe._Faces()[v.faceIncidente].indices[1];
+        premier_sommet = sommet_courant;
+    }
+}
 
 Circulateur_de_sommets& Circulateur_de_sommets::operator=(const Circulateur_de_sommets& rhs)
 {
@@ -145,9 +188,16 @@ Circulateur_de_sommets& Circulateur_de_sommets::operator++() {
     auto& current_vertex = mesh->vertices[sommet_courant];
     
     const auto& current_face = mesh->faceFromPair(*sommet_parent, current_vertex);
-    const auto& vertex_index = mesh->VertexIndexOnFace(current_vertex, mesh->faces[current_face]);
+ 
+    auto itc = mesh->faces_incidentes(*sommet_parent);
+    while (itc.face_courante != current_face) {
+        ++itc;
+    }
+    ++itc;
+    const auto& vertex_index = mesh->VertexIndexOnFace(current_vertex, mesh->faces[itc.face_courante]);
+    sommet_courant = sommet_courant = mesh->faces[current_face].indices[(vertex_index + 1) % 3];
+
     
-    sommet_courant = (vertex_index + 1) % mesh->faces[current_face].nbIndicesPerFace;
     return *this;
 }
 
@@ -526,8 +576,8 @@ void Mesh::inserer_sommet(Vertex v) {
 //                    itcout++;
 //                }
 
+                itl--;
                 while (itl != std::next(itDebut,1)) {
-                    itl--;
 //                    std::cout << "------Pre Itl ----\n" << std::endl;
 //                    std::cout << "itl : " << itl->aretes.first << " " << itl->aretes.second << "\n"<< std::endl;
                     if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
@@ -759,8 +809,8 @@ void Mesh::inserer_sommet_delaunay_incr(Vertex v) {
                 //                    itcout++;
                 //                }
                 
+                itl--;
                 while (itl != std::next(itDebut,1)) {
-                    itl--;
                     //                    std::cout << "------Pre Itl ----\n" << std::endl;
                     //                    std::cout << "itl : " << itl->aretes.first << " " << itl->aretes.second << "\n"<< std::endl;
                     if (is_trigo(vertices[itl->aretes.first], v, vertices[itl->aretes.second])) {
@@ -915,7 +965,7 @@ void Mesh::lawsonQueue(std::queue<std::pair<int,unsigned>> file) {
         file.pop();
         for (int l = 1; l < file.size(); l++) {
             if (file.front().first == i) {
-                std::cout << "\nface i: "<<i<< "dans la queue\n"<< std::endl;
+//                std::cout << "\nface i: "<<i<< "dans la queue\n"<< std::endl;
                 int newface = this->faces[i].facesAdjacentes[VertexIndexOnFace(this->vertices[file.front().second], this->faces[i])];
                 unsigned indexOppose;
                 for (unsigned k = 0; k < 3; ++k) {
@@ -1173,12 +1223,9 @@ void Mesh::split_face_delaunay_incr (int i, unsigned p) {
         int aDansj = VertexIndexOnFace(vertices[a], faces[j]);
         faces[j].facesAdjacentes[(aDansj + 2) % 3] = m;
         
-        std::cout <<"face j :"<< j << std::endl;
-        
         Cercle cercleM(this->faces[m], *this);
         if (cercleM.isInCercle(this->vertices[this->faces[j].indices[(aDansj + 2) % 3]].position)) {
             file.push(std::make_pair(m, p));
-            std::cout <<"face m" << std::endl;
         }
     }
     
@@ -1186,23 +1233,19 @@ void Mesh::split_face_delaunay_incr (int i, unsigned p) {
         int aDansk = VertexIndexOnFace(vertices[a], faces[k]);
         faces[k].facesAdjacentes[(aDansk + 1) % 3] = m+1;
         
-        std::cout <<"face k : "<< k << std::endl;
         
         Cercle cercleN(this->faces[n], *this);
         if (cercleN.isInCercle(this->vertices[this->faces[k].indices[(aDansk + 1) % 3]].position)) {
             file.push(std::make_pair(n, p));
-            std::cout <<"face n" << std::endl;
         }
     }
     
     if (l != -1) {
         int bDansl = VertexIndexOnFace(vertices[b], faces[l]);
-        std::cout <<"face l : "<< l << std::endl;
         
         Cercle cercleI(this->faces[i], *this);
         if (cercleI.isInCercle(this->vertices[this->faces[l].indices[(bDansl + 1) % 3]].position)) {
             file.push(std::make_pair(i, p));
-            std::cout <<"face i" << std::endl;
         }
     }
     
@@ -1217,7 +1260,6 @@ void Mesh::split_face_delaunay_incr (int i, unsigned p) {
     }
     
     if(file.size()) {
-        std::cout <<"lawsonQ" << std::endl;
         lawsonQueue(file);
     }
     
@@ -1292,4 +1334,113 @@ void Mesh::flip (int i, unsigned a) {
     faces[i].facesAdjacentes[aDansi] = m;
     faces[j].facesAdjacentes[(bDansj+1) % 3] = n;
     
+}
+
+Shape Mesh::crust() {
+    Shape shape;
+    shape.vertices = this->vertices;
+    
+    //Insertion centre voronoi
+    long fin_faces = this->faces.size();
+    long fin_vertices = this->vertices.size();
+    
+    std::vector<Vertex> centresVoronoi;
+    
+    for(unsigned i = 0; i < fin_faces; ++i)
+    {
+        Cercle circle(faces[i], *this);
+        Point c = circle.centre();
+        Vertex v;
+        
+        v.position.x = c.x;
+        v.position.y = c.y;
+        v.position.z = c.z;
+        
+        centresVoronoi.push_back(v);
+    }
+    for (unsigned i = 0; i < centresVoronoi.size(); ++i){
+        inserer_sommet_delaunay_incr(centresVoronoi[i]);
+    }
+    
+    //Arêtes des points échantillonés
+    
+    for (unsigned i = 0; i < fin_vertices; ++i) {
+
+        int face_inc_i = this->vertices[i].faceIncidente;
+        unsigned iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc_i]);
+        
+        int face_inc = this->faces[face_inc_i].facesAdjacentes[(iDansf+2)%3];
+        
+        int prev_face = face_inc_i;
+        int last_vert = this->faces[face_inc_i].indices[(iDansf+2)%3];
+        int vert;
+        if (face_inc!= -1) {
+            iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc]);
+            vert = this->faces[face_inc].indices[(iDansf+2)%3];
+        }
+        
+        
+        while (face_inc != -1 && vert != last_vert) {
+            if (vert < fin_vertices && vert < i) {
+                std::pair<unsigned, unsigned> arete = std::make_pair(i, vert);
+                shape.aretes.push_back(arete);
+            }
+            prev_face = face_inc;
+            face_inc = this->faces[face_inc].facesAdjacentes[(iDansf+2)%3];
+            if (face_inc != -1) {
+                iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc]);
+                vert = this->faces[face_inc].indices[(iDansf+2)%3];
+            }
+        }
+        //test si sortie
+        if (face_inc == -1) {
+            //test du dernier sommet avant la face -1 à gauche
+            vert = this->faces[prev_face].indices[(iDansf+1)%3];
+            if (vert < fin_vertices && vert < i) {
+                std::pair<unsigned, unsigned> arete = std::make_pair(i, vert);
+                shape.aretes.push_back(arete);
+            }
+        
+            //on repart dans l'autre sens depuis le premier sommet
+            iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc_i]);
+            prev_face = face_inc_i;
+            face_inc = this->faces[face_inc_i].facesAdjacentes[(iDansf+1)%3];
+            if (face_inc != -1) {
+                iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc]);
+                vert = this->faces[face_inc].indices[(iDansf+1)%3];
+            }
+        
+            while (face_inc != -1) {
+                if (vert < fin_vertices && vert < i) {
+                    std::pair<unsigned, unsigned> arete = std::make_pair(i, vert);
+                    shape.aretes.push_back(arete);
+                }
+                
+                prev_face = face_inc;
+                face_inc = this->faces[face_inc].facesAdjacentes[(iDansf+1)%3];
+                if (face_inc != -1) {
+                    iDansf = this->VertexIndexOnFace(this->vertices[i], this->faces[face_inc]);
+                    vert = this->faces[face_inc].indices[(iDansf+1)%3];
+                }
+            }
+            
+            if (face_inc == -1) {
+                vert = this->faces[prev_face].indices[(iDansf+2)%3];
+                if (vert < fin_vertices && vert < i) {
+                    std::pair<unsigned, unsigned> arete = std::make_pair(i, vert);
+                    shape.aretes.push_back(arete);
+                }
+            }
+        
+        } else if (vert == last_vert) {
+            //test si boucle pour le dernier élément
+            if (vert < fin_vertices && vert < i) {
+                std::pair<unsigned, unsigned> arete = std::make_pair(i, vert);
+                shape.aretes.push_back(arete);
+            }
+        }
+    
+    }
+    
+    return shape;
 }

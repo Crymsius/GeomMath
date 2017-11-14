@@ -6,6 +6,7 @@
 #include <queue>
 #include "Face.h"
 #include "Vertex.h"
+#include "Shape.h"
 
 class Mesh;
 
@@ -54,16 +55,17 @@ class Circulateur_de_faces {
 private:
     std::shared_ptr<Mesh> mesh;
     std::shared_ptr<Vertex> sommet_parent; //sommet autour duquel on tourne
-    int face_courante; //face courante
-    int premiere_face; //premiere face
 
 public:
-    Circulateur_de_faces ();    
+    int face_courante; //face courante
+    int premiere_face; //premiere face
+    Circulateur_de_faces ();
     Circulateur_de_faces (const Mesh& mesh, const Vertex& v);    // constructor
     Circulateur_de_faces (const Circulateur_de_faces &); // copy constructor
     
     Circulateur_de_faces& operator=(const Circulateur_de_faces& other);  // assignment
     Circulateur_de_faces& operator++(); //pre-increment
+    Circulateur_de_faces& operator--(); //pre-decrement
     int operator*() const; //dereference
     
     friend bool operator== (const Circulateur_de_faces& lhs, const Circulateur_de_faces& rhs)
@@ -85,9 +87,9 @@ private:
     std::shared_ptr<Vertex> sommet_parent; //sommet autour duquel on tourne
     unsigned sommet_courant; //sommet courant
     unsigned face_courante; //sommet courant
-    unsigned premier_sommet; //premier sommet
 
 public:
+    unsigned premier_sommet; //premier sommet
     Circulateur_de_sommets ();
     Circulateur_de_sommets (const Mesh& mesh_associe, const Vertex& v); // constructor
     Circulateur_de_sommets (const Circulateur_de_sommets &); // copy constructor
@@ -129,6 +131,9 @@ public:
   
     void inserer_sommet (Vertex v);
     void inserer_sommet_delaunay_incr(Vertex v);
+    
+    Shape crust();
+    
     struct Contours {
         std::pair<unsigned, unsigned> aretes;
         unsigned faces;
