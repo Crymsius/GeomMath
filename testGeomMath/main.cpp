@@ -14,8 +14,8 @@ int main(void) {
     Mesh mesh;
 //    Iterateur_de_sommets its = mesh.sommets_debut();
 //    Circulateur_de_faces cf;
-//    mesh.ReadFromPoints("coeur.points");
-    mesh.ReadFromPoints("test_crust/line1.points");
+    mesh.ReadFromPoints("test.points");
+//    mesh.ReadFromPoints("test_crust/line4.points");
 //    Vertex v = mesh._Vertices()[0];
     
 //    Circulateur_de_faces cf = mesh.faces_incidentes(v);
@@ -62,8 +62,8 @@ int main(void) {
     mesh.lawsonAll();
     
     Vertex v;
-    v.position.x = - 0.80625;
-    v.position.y = 0.9625;
+    v.position.x = - 0.365625;
+    v.position.y = 0.909375;
     v.position.z = 0.;
     
     std::cout <<"avant insertion" << std::endl;

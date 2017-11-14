@@ -917,14 +917,14 @@ std::queue<std::pair<int,unsigned>> Mesh::findAretesToFlip () {
     //file des paires <face, sommet opposé à l'autre face>
     std::queue<std::pair<int,unsigned>> file, fileCopy;
     for (auto i = 0; i < this->faces.size(); ++i) {
-        for (auto j = 0; j < this->faces[i].nbIndicesPerFace; ++j) {
+        for (auto j = 0; j < 3; ++j) {
             //face adjacente j
             int facej = this->faces[i].facesAdjacentes[j];
             
             //pas sur le contours
             if (facej!= -1) {
                 //premier sommet de l'arête
-                unsigned a = (j+1) % this->faces[i].nbIndicesPerFace;
+                unsigned a = this->faces[i].indices[(j+1) % 3];
                 //sommet à tester
                 unsigned p = this->faces[facej].indices[(VertexIndexOnFace(this->vertices[a], this->faces[facej]) + 1) % 3];
                 Cercle cercle(this->faces[i], *this);
@@ -1306,7 +1306,7 @@ void Mesh::flip (int i, unsigned a) {
     if (n!= -1) {
         int aDansn = VertexIndexOnFace(vertices[faces[i].indices[(aDansi)]], faces[n]);
         faces[n].facesAdjacentes[(aDansn+2) % 3] = j;
-    } else {
+    } else {
         auto it = contours.begin();
         while (it != contours.end()) {
             if (it->faces == i && (
@@ -1358,7 +1358,7 @@ Shape Mesh::crust() {
         
         centresVoronoi.push_back(v);
     }
-    for (unsigned i = 0; i < centresVoronoi.size(); ++i){
+    for (unsigned i = 0; i < centresVoronoi.size(); ++i) {
         inserer_sommet_delaunay_incr(centresVoronoi[i]);
     }
     

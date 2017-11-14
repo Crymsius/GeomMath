@@ -4,12 +4,12 @@
 class Vector3 {
     public:
 
-    float x;
-    float y;
-    float z;
+    double x;
+    double y;
+    double z;
 
     Vector3();
-    Vector3(float x, float y, float z);
+    Vector3(double x, double y, double z);
     Vector3(const Vector3& coordinates);
 
     bool operator==(const Vector3 &rhs) const;
@@ -18,10 +18,10 @@ class Vector3 {
     Vector3& operator-(const Vector3 &rhs);
     Vector3& operator=(const Vector3 &rhs);
 
-    Vector3& operator+(float scalar);
-    Vector3& operator-(float scalar);
-    Vector3& operator*(float scalar);
-    Vector3& operator/(float scalar);
+    Vector3& operator+(double scalar);
+    Vector3& operator-(double scalar);
+    Vector3& operator*(double scalar);
+    Vector3& operator/(double scalar);
 };
 
 #endif

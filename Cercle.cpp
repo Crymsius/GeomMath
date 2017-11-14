@@ -21,17 +21,17 @@ Cercle::Cercle (const Cercle& cerc) :
 {}
 
 bool Cercle::isInCercle(const Point p) {
-    Mat3<float> mat((b.x - a.x), (b.y - a.y), (std::pow((b.x - a.x),2) + std::pow((b.y - a.y),2)),
+    Mat3<double> mat((b.x - a.x), (b.y - a.y), (std::pow((b.x - a.x),2) + std::pow((b.y - a.y),2)),
                 (c.x - a.x), (c.y - a.y), (std::pow((c.x - a.x),2) + std::pow((c.y - a.y),2)),
                 (p.x - a.x), (p.y - a.y), (std::pow((p.x - a.x),2) + std::pow((p.y - a.y),2)));
-    float det = - mat.det();
+    double det = - mat.det();
     
     return det > 0;
 }
 
 Point Cercle::centre() {
-    float D = 2 * (a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y));
-    float x = (((a.x * a.x)+(a.y * a.y))*(b.y - c.y) + ((b.x * b.x)+(b.y * b.y))*(c.y - a.y) + ((c.x * c.x)+(c.y * c.y))*(a.y - b.y))/D;
-    float y = (((a.x * a.x)+(a.y * a.y))*(c.x - b.x) + ((b.x * b.x)+(b.y * b.y))*(a.x - c.x) + ((c.x * c.x)+(c.y * c.y))*(b.x - a.x))/D;
+    double D = 2 * (a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y));
+    double x = (((a.x * a.x)+(a.y * a.y))*(b.y - c.y) + ((b.x * b.x)+(b.y * b.y))*(c.y - a.y) + ((c.x * c.x)+(c.y * c.y))*(a.y - b.y))/D;
+    double y = (((a.x * a.x)+(a.y * a.y))*(c.x - b.x) + ((b.x * b.x)+(b.y * b.y))*(a.x - c.x) + ((c.x * c.x)+(c.y * c.y))*(b.x - a.x))/D;
     return Point(x,y,0.f);
 }
