@@ -225,6 +225,11 @@ public:
     }
 };
 
+/// Contours
+// structure représentant une arête du contours du maillage
+///
+// pair<unsigned, unsigned> aretes : paire d'indices de sommets définissant une arête.
+// unsigned faces : indice de la face aillant portant l'arête du contours.
 struct Contours {
     std::pair<unsigned, unsigned> aretes;
     unsigned faces;
