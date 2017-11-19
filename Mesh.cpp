@@ -406,15 +406,15 @@ const std::vector<Face> &Mesh::_Faces() const {
     return faces;
 }
 
-int Mesh::VertexIndex(const int f, const int i) const {
+int Mesh::VertexIndex(const int f, const int i) const {
     return faces[f].indices[i];
 }
 
-int Mesh::NextVertexIndex(const int f, const int i) const {
+int Mesh::NextVertexIndex(const int f, const int i) const {
     return faces[f].indices[(i+1) % 3];
 }
 
-int Mesh::PrevVertexIndex(const int f, const int i) const {
+int Mesh::PrevVertexIndex(const int f, const int i) const {
     return faces[f].indices[(i-1) % 3];
 }
 
@@ -440,13 +440,12 @@ int Mesh::faceFromPair(const Vertex& v1, const Vertex& v2) const {
 
 int Mesh::locatePointInFace(const Vertex v) {
     int f = 0;
-    //wip
     while (!is_in_triangle(faces[f], v) || f == -1) {
-        for (int i = 0; i < faces[f].nbIndicesPerFace; ++i) {
+        for (int i = 0; i < 3; ++i) {
             if (!is_trigo(vertices[faces[f].indices[i]],
-                          vertices[faces[f].indices[(i+1) % faces[f].nbIndicesPerFace]],
+                          vertices[faces[f].indices[(i+1) % 3]],
                            v)) {
-                f = faces[f].facesAdjacentes[(i+2) % faces[f].nbIndicesPerFace];
+                f = faces[f].facesAdjacentes[(i+2) % 3];
                 break;
             }
         }

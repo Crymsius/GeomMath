@@ -1,20 +1,21 @@
-//
-//  Mat3.h
-//  GeomMath
-//
-//  Created by Crymsius on 02/10/2017.
-//  Copyright © 2017 Crymsius. All rights reserved.
-//
-
-#ifndef Mat3_h
-#define Mat3_h
-
+#ifndef MAT3_H
+#define MAT3_H
 #include <type_traits>
+
+/// Mat3
+// classe modélisant une matrice 3x3
+//
+/// constructeurs :
+// le constructeur vide renvoit la matrice identité
+// les éléments sont données ligne par ligne.
+//
+/// methodes
+// determinant : renvoit le determinent de la matrice
 
 template<typename T>
 class Mat3 {
 public:
-    static_assert(std::is_arithmetic<T>::value, "error tavu");
+    static_assert(std::is_arithmetic<T>::value, "Mat3 elements must be arithmetic");
     
     //constructors
     Mat3();

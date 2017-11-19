@@ -1,6 +1,16 @@
 #ifndef VECTOR2_H
 #define VECTOR2_H
 
+/// Vector2
+// classe représentant un vecteur 2D
+///
+// float x, y : coordonnées du vecteur
+///
+// opérateurs :
+// • +, - avec un autre Vector2
+// • +, -, * avec un scalaire
+
+
 class Vector2 {
     public:
 
